@@ -1,0 +1,26 @@
+{% extends "base.html.twig" %}
+
+
+{% block body %}
+
+	<div class="row justify-content-between mt-5">
+
+{% for produit in produits %}  
+    
+		<div class="card col-md-4" style="width: 18rem;">
+			<img src="{{ asset('upload/')~produit.photo1 }}" class="card-img-top" alt="...">
+			<div class="card-body">
+				<h5 class="card-title">{{  produit.titre   }}</h5>
+				<h5 class="card-title">{{  produit.prix   }} €</h5>
+				<p class="card-text">{{  produit.descriptif  }}</p>
+				<a href="{{ path('ajoutPanier', { id: produit.id, param: 'home' }) }}" class="btn btn-primary">Ajouter</a>
+               <br>
+				<a href="{{ path('detailProduit', {id:produit.id}) }}">laisser un avis</a>
+			</div>
+		</div>
+{% endfor %}
+
+	</div>
+
+
+{% endblock %}

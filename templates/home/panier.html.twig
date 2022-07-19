@@ -1,0 +1,72 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+
+{% if panier is not empty  %}
+	<table class="table">
+		<thead>
+			<tr>
+
+				<th scope="col">Titre</th>
+				<th scope="col">Prix</th>
+				<th scope="col">Photo</th>
+				<th scope="col">Retirer</th>
+				<th scope="col">Quantité</th>
+				<th scope="col">Ajouter</th>
+				<th scope="col">Annuler</th>
+			</tr>
+		</thead>
+		<tbody>
+
+			{% for item in panier %}
+
+				<tr>
+
+					<td>{{ item.produit.titre }}</td>
+					<td>{{  item.produit.prix   }}
+						€</td>
+					<td><img src="{{ asset('upload/')~item.produit.photo1 }}" width="100" alt="..."></td>
+
+					<td>
+						<a href="{{ path('retraitPanier', {id:item.produit.id}) }}" class="btn btn-primary">-</a>
+					</td>
+					<td>{{ item.quantite }}</td>
+					<td>
+						<a href="{{ path('ajoutPanier', { id:item.produit.id, param:'panier' }) }}" class="btn btn-primary">+</a>
+					</td>
+					<td>
+						<a href="{{ path('supprimerPanier', {id:item.produit.id}) }}" class="btn btn-danger">X</a>
+					</td>
+
+
+				</tr>
+			{% endfor %}
+
+		</tbody>
+	</table>
+
+    <a href="{{ path('viderPanier') }}" class="btn btn-info">Réinitialiser</a>
+
+    {% if app.user %}
+    
+      <a href="{{ path('commande') }}" class="btn btn-warning">Commander!</a>
+      
+      {% else %}
+
+        <a href="{{ path('login') }}" class="btn btn-warning">Connectez-vous !!</a>
+        
+    {% endif %}
+
+  
+
+
+{% else %}
+    
+<div class="alert alert-info text-center w-50  mx-auto">
+<p>Votre panier est vide,   <a href="{{ path('home') }}">consultez notre catalogue</a> </p>
+</div>
+
+{% endif %}
+
+
+{% endblock %}

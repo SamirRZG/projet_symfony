@@ -1,0 +1,296 @@
+
+
+Lancement d'un nouveau projet:
+click droit, git bash here à l'endroit ou l'on souhaite installer le projet.
+
+faire la commande suivante:
+composer create-project symfony/website-skeleton:"^5.4" nom_du_projet
+
+ouvrir le projet à la racine dans son IDE.
+Aller configurer le .env => DBUSER, DBPASSWORD, DBNAME, serverVersions
+commenter avec # la connexion postgrsql
+ex: mac= DATABASE_URL="mysqli://root:root@127.0.0.1:8889/only_movie?serverVersion=5.7"
+    windows= DATABASE_URL="mysqli://root:@127.0.0.1:3306/only_movie?serverVersion=MariaDB-10.4.21"
+
+lancer votre server local (xammp, map, wamp)
+
+creer la BDD:
+terminal=>   php bin/console doctrine:database:create
+
+
+pour installer un certificat https:
+
+lancer à la racine la commande:
+symfony server:ca:install
+
+lancer son server de symfony à la racine de son projet:
+symfony serve
+symfony server:start
+php -S 127.0.0.1:8002 -t public
+
+ouvrir son projet dans le navigateur en frappant:  
+ 127.0.0.1:8002 ou https://127.0.0.1:8002
+
+###############################################################    LOGIQUE DE SYMFONY    ###############################################################
+aller creer votre template de base dans base.html.twig (nav, container, link css, script etc.....)
+
+configurer dans config/package/twig.yaml pour Bootstrap ou Tailwind css
+
+en respectant l'indentation:
+
+twig:
+    default_path: '%kernel.project_dir%/templates'
+    form_themes: ['bootstrap_5_layout.html.twig']
+
+
+Ensuite créer son premier controller:
+  php bin/console make:controller Home
+
+Supprimer la méthode index créé dans le controller
+Se créer une public function d'accueil du controller
+
+exemeple:
+
+respecter les "" sur les annotation @
+toute public function doit contenir un return (soit redirectToRoute() soit Render())
+
+/**
+*
+*@Route("/", name="home")
+*/
+public function home()
+{
+
+ return $this->render('nomducontrollerenminuscule/nomdufichiertwig.html.twig', [
+
+]);
+}
+
+  toute page nécessitant le rendu d'une vue doit contenir un render.
+Toute variable à utiliser dans le twig doit imperativement être envoyé de la méthode rendant la vue de cette page
+
+on veut utiliser une variable title dans le twig ( donc {{ title }})
+necessite dans la méthode:
+
+ return $this->render('nomducontrollerenminuscule/nomdufichiertwig.html.twig', [
+     'title'=>$title
+]);
+
+à gauche de => le nom  de la variable que l'on va utiliser dans le twig, 
+à droite le nom de la variable dans la méthode qui contient les information de title
+
+On connait son schema de BDD.
+
+On commence par créer la première table faisant sens au projet
+
+pour créer une table, on créé dans l'application une entité:
+php bin/console make:entity lenomdelatable
+chaque champs de la table en bdd est une property.
+on doit renseigner son nom, son type et si elle est ou non nullable
+
+ensuite pour executer la creation de cette table en BDD:
+soit avec des migrations:
+php bin/console make:migration
+php bin/console doctrine:migrations:create
+
+soit brutal:
+php bin/console doctrine:schema:update --force
+
+ensuite aller faire les controles sur les propriétés des entités
+cf Assert et Constraints dans doc symfony
+ex:
+
+penser à importer Assert de symfony\Constraint as Assert
+/**
+*
+*@Assert\NotBlanck(message="veuillez saisir ce champs")
+*/
+
+creer un formulaire de symfony:
+php bin/console make:form nomduformulaire (en general nomdelatable)
+
+aller dans src/form/ nomduformType.php
+
+effectuer les controles sur champs de formulaire et penser à importer toutes les classes
+ex: ->add('title', TextType::class, [
+    'required'=>false,
+    'label'=>false,
+    'attr'=>[
+         'placeholder'=>'titre de ....'
+]
+]);
+
+ajouter un bouton submit
+->add('valider', SubmitType::class) 
+sinon le créer en html dans le twig.
+
+créer une méthode dans le controller pour générer l'affichage de ce formulaire
+
+Lorsque l'on souhaite récupérer des données de superglobale ($_GET, $_POST) injecter en dépendance Request $request de HttpFoundation
+les données de formulaire en get=  $request->query->get('nomdelinputenget')
+les données de formulaire en post=  $request->request->get('nomdelinputenpost')
+les données de formulaire en post de symfony venant dans type = $request->request->get('nomdutypesanslemottype')['nom du add provenant du type']
+
+Lorsque l'on souhaite accéder aux données de la session ou la modifier => SessionInterface $session ( $session->set('nomdeladonnée', 'valeur de la donnée'))
+												 $session->get('nomdeladonnée')
+												$session->remove('nomdeladonnée') equivaut à unset
+
+Lorsque l'on souhaite récupérer des données provenant de la BDD, on appelle le repository de la table ou on effectue la requete
+nomdelatableRepository $repository
+
+lorsque l'on souhaite modifier, inserer ou supprimer en BDD, on appelle EntityManagerInterface $manager
+
+/**
+*
+*@Route("/formulaire", name="formulaire")
+*/
+public function formulaire(Request $request, EntityManagerInterface $manager)
+{
+   en insert créer un nouvel objet nu de la table (de l'entité)
+   $objet= new nomEntite();
+
+  // création du form
+   $form=$this->createForm(nomduType::class, $objet //en option le tableau qui déclare $options dans le type// , ['add'=>true] )
+ // on charge les données du formulaire:
+   $form->handleRequest($request);
+à présent $objet est rempli des données du formulaire
+
+   // on place la condition de soumission et de validation du formulaire
+     if($form->isSubmitted() && $form->isValid()):
+
+        si tout les champs du type renseignent les données necessaires à l'insert on appelle notre manager
+	$manager->persist($object); -> ici en mémoire dans l'app
+	$manager->flush(); -> ici executé en BDD
+
+        si certains champs sont à renseigner comme une date instantané ou les données de l'utilisateur en session
+        avant d'appeler le manager, on récupere l'objet et accédons à ses setter
+        $object->setDate(new DateTime\);
+        $object->setUser($this->getUser());
+      
+
+	endif;
+
+  
+
+ return $this->render('nomducontrollerenminuscule/nomdufichierdeformulaire.html.twig', [
+   // on renvoie le formulaire à la vue
+    'form'=>$form->createView()
+
+]);
+}
+
+
+###### en modification ##########
+/**
+*@Route("/editFormulaire/{id}", name="editFormulaire") // la route en modification avec {id} transité en paramametre du twig (ex: path('editFormulaire', {id: entite.id})  )
+*@Route("/formulaire", name="formulaire")  // la route en insert
+*/
+public function formulaire(Request $request, EntityManagerInterface $manager, Entite $entite) 
+    on injecte en dépendance l'entité pour que symfony remplisse notre objet à modifier seulement si aucun repository n'est injecté en dépendance.
+    sinon on injecte $id=null
+
+
+{
+
+	if($entité ou $id): // si symfony a rempli notre $entite ou si $id n'est pas null  on est bien en modification   
+	$object=$entite
+	ou
+	$object=$repository->find($id);
+        
+	else:
+       en insert créer un nouvel objet nu de la table (de l'entité)
+       $objet= new nomEntite();
+	endif;
+
+  // création du form
+   $form=$this->createForm(nomduType::class, $objet //en option le tableau qui déclare $options dans le type// , ['add'=>true] )
+ // on charge les données du formulaire:
+   $form->handleRequest($request);
+à présent $objet est rempli des données du formulaire
+
+   // on place la condition de soumission et de validation du formulaire
+     if($form->isSubmitted() && $form->isValid()):
+
+
+        $object->setDate(new DateTime\);
+        $object->setUser($this->getUser());
+
+	$manager->persist($object); -> ici en mémoire dans l'app
+	$manager->flush(); -> ici executé en BDD
+
+       
+
+     
+      
+
+	endif;
+
+  
+
+ return $this->render('nomducontrollerenminuscule/nomdufichierdeformulaire.html.twig', [
+   // on renvoie le formulaire à la vue
+    'form'=>$form->createView()
+
+]);
+}
+
+
+
+######## Lecture des données provenant de la BDD #########################################
+
+
+ on doit donc appeler le repository
+
+/**
+*@Route("/afficheDonnees", name="afficheDonnees") // sans parametre
+*@Route("/afficheDonnees/{id}", name="afficheDonnees") // avec id pour methode ->find()
+*@Route("/afficheDonnees/{param}", name="afficheDonnees") // avec parametre pour methode ->findBy()
+*
+*/
+public function affichDonnées(entiteRepository $repository,ou $id, ou $param)
+{
+
+   $donnee=$repository->find($id); retourne un objet par rapport à son id
+   $donnee=$repository->findOneBy(['nomPropriete'=>$param, 'nomPropriete2'=>$param2], ['date'=>'DESC']) retourne un objet par rapport à une propriété définie
+   
+   $donnees=$repository->findAll(); retourne un tableau de tout les objets inserés en BDD
+   $donnees=$repository->findBy(['nomPropriete'=>$param, 'nomPropriete2'=>$param2], ['date'=>'DESC'], 5 (si on souhaite une limite de résultats))  retourne un tableau de tout les objets inserés en BDD par critère
+
+
+
+ return $this->render('nomducontrollerenminuscule/nomdufichierdeformulaire.html.twig', [
+   // on renvoie le formulaire à la vue
+    'donnees'=>$donnees // si plusieurs données attendus et donc une boucle nécessaire dans le twig
+    'donnee'=>$donnee // sinon pour une seule donnée attendu
+
+]);
+}
+
+
+########################  Suppression (delete) #################################
+
+
+/**
+*
+*@Route("/deleteDonnees/{id}", name="deleteDonnees") 
+*/
+public function deleteDonnee(Entity $entity, EntityManagerInterface $manager )
+{
+
+  $manager->remove($entity);
+  $manager->flush();
+
+ensuite addFlash et redirect
+
+  pas de necessité de render , uniquement de redirect()
+}
+
+
+
+
+
+
+
+
+
+

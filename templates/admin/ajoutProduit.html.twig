@@ -1,0 +1,45 @@
+{% extends "backoffice.html.twig" %}
+
+
+{% block body %}
+
+	{# {{   form(form)   }} #}
+
+	{{  form_start(form) }}
+	{{  form_row(form.titre) }}
+	{{  form_row(form.prix) }}
+	{{  form_row(form.descriptif) }}
+	{{  form_row(form.stock) }}
+	{{  form_row(form.photo1, { 'attr': { 'onChange': 'loadFileOne(event)'  } }) }}
+	<div class="text-center">
+		<img id="image1" width="300">
+	</div>
+	{{  form_row(form.photo2, { 'attr': { 'onChange': 'loadFileTwo(event)'  } }) }}
+	<div class="text-center">
+		<img id="image2" width="300">
+	</div>
+	{{  form_row(form.photo3, { 'attr': { 'onChange': 'loadFileThree(event)'  } }) }}
+	<div class="text-center">
+		<img id="image3" width="300">
+	</div>
+	{{  form_end(form) }}
+
+<script>
+     var loadFileOne=function (event) {
+        var image1=document.getElementById('image1');
+        image1.src= URL.createObjectURL(event.target.files[0]);
+
+     }
+        var loadFileTwo=function (event) {
+        var image2=document.getElementById('image2');
+        image2.src= URL.createObjectURL(event.target.files[0]);
+
+     }
+        var loadFileThree=function (event) {
+        var image3=document.getElementById('image3');
+        image3.src= URL.createObjectURL(event.target.files[0]);
+     }
+</script>
+
+
+{% endblock %}

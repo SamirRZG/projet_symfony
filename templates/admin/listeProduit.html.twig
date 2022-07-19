@@ -1,0 +1,44 @@
+{% extends "backoffice.html.twig" %}
+
+
+
+{% block body %}
+
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Titre</th>
+      <th scope="col">Prix</th>
+      <th scope="col">Descriptif</th>
+      <th scope="col">Photo</th>
+      <th scope="col">Stock</th>
+      <th scope="col">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+
+{% for produit in produits %}
+
+    <tr>
+      <th scope="row">{{ loop.index }}</th>
+      <td>{{ produit.titre }}</td>
+      <td>{{  produit.prix   }} €</td>
+      <td>{{  produit.descriptif  }}</td>
+      <td><img src="{{ asset('upload/')~produit.photo1 }}" width="100" alt="..."></td>
+      <td>{{  produit.stock  }}</td>
+      <td>
+      <a href="{{ path('modificationProduit', { id : produit.id }) }}" class="btn btn-success">Modifier</a>
+      <a href="{{ path('suppressionProduit', { id : produit.id }) }}" onclick="return confirm('Etes vous sûr de vouloir supprimer ce produit?');" class="btn btn-danger">Supprimer</a>
+      
+      </td>
+    </tr>
+{% endfor %}
+
+  </tbody>
+</table>
+
+
+
+{% endblock %}

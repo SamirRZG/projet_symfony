@@ -1,0 +1,39 @@
+{% extends "backoffice.html.twig" %}
+
+
+{% block body %}
+
+
+{{ form(form) }}
+
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Titre</th>
+      <th scope="col">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+
+{% for sousCategorie in sousCategories %}
+
+    <tr>
+      <th scope="row">{{ loop.index }}</th>
+      <td>{{ sousCategorie.titre }}</td>
+      <td>
+      <a href="{{ path('modificationSousCategorie', { id : sousCategorie.id }) }}" class="btn btn-success">Modifier</a>
+  <a href="{{ path('suppressionSousCategorie', { id : sousCategorie.id }) }}" onclick="return confirm('Etes vous sûr de vouloir supprimer cette sous-categorie?');" class="btn btn-danger">Supprimer</a>
+      
+      </td>
+    </tr>
+{% endfor %}
+
+  </tbody>
+</table>
+
+
+
+
+{% endblock %}

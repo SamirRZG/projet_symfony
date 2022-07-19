@@ -1,0 +1,148 @@
+Mise en place de l'environnement d'une machine:
+
+télécharger et installer votre IDE (visual studio code, phpstorm,  sublime....).
+télécharger votre serveur local avec version de php >7.3. Xampp, Wammp, Mamp ... ouvrir un terminal et verifier la commande "php -v"
+Télécharger composer sur getcomposer, l'installer . ouvrir un terminal et verifier la commande "composer --version
+Télécharger Git et installer.
+
+
+
+
+###########################  VOCABULAIRE ET COMMANDES INCONTOURNABLES DE SYMFONY ###################################
+
+ORM : Un mapping objet-relationnel (en anglais object-relational mapping ou ORM) est un type de programme informatique qui se place en interface
+ entre un programme applicatif et une base de données relationnelle pour simuler une base de données orientée objet. Chez Symfony : ORM=DOCTRINE.
+
+Donc tout ce qui est en liens avec la base de donnée pour la création, la modification, la suppression appelle des classes de doctrine et des méthodes de ces classe
+
+Les Controller : Permettent d'interpréter la requête HTPP éffectuée via l'URL. Et renvoie à Twig, à la vue les informations demandées
+
+Les Entity: Représentent une table de la base de donnée, chacune des propriété de l'entité représente un champs de la table avec toutes les spécifications de ce champs.
+Donc en liens direct avec DOCTRINE. C'est ici que l'on défini les contraintes telles que le fait qu'elle ne soit pas null, minimum de caractère, maximum aussi, controle du type
+et gestion des messages renvoyé si non respecté
+
+Les Repository: Représentent les requêtes de SELECT affiliées aux entités. permettent ainsi de récupérer chaque insertion en BDD.
+grace à des méthodes find(), findAll(), findBy() ...
+
+Les Type: ou formType, génèrent des formumlaires en liens avec une entité chaques propriétés de l'entité représente un input généré par le type.
+On peux y définir les contraintes aussi, mais sert surtout à customiser les input, pour gérer le type d'input, les labels, et les attributs (placeholder, class, id ...)
+
+######   les injections de dépendances à connaitre :  #############
+disons une table Produit:
+
+# Produit $produit => use App\Entity\Produit;  à appeler lors d'une création, modification ou suppression en l'occurence d'un produit
+
+# ProduitRepository $repoProduit => use App\Repository\ProduitRepository; à appeler pour une éffectuer requête en BDD et la transmettre à la Vue  (SELECT )
+C'est un répertoire de tout les inserts en BDD.
+
+# Request $request => use Symfony\Component\HttpFoundation\Request; à appeler pour obtenir les information d'une superglobale provenant de la vue 
+($_GET=>$request->query(), $_POST=>$request->request(), $_SESSION=>$request->getSession(), $_FILE=>$request->getData(), $_COOKIE=>$request->cookie() ...)
+
+# EntityManagerInterface $manager => use Doctrine\ORM\EntityManagerInterface; à appeler executer une insertion, modification ou suppression. C'est lui qui va binder les
+value et préparer les requêtes avant de les éxécuter
+
+############## Les commandes à connaitre #######################
+
+	php bin/console doctrine:database:create   ->après config de la BDD en .env permet de créer la BDD
+	php bin/console make:controller ->Créé un controller avec sa fonction index et une vue de cette fonction en twig classée dans un dossier du même nom que le controller  
+	php bin/console make:entity ->Créé une table de BDD sous forme d'objet avec chaque propriété représentant un champs, gère les relations, types, longueur, 
+				      le fait que le champs soit nullable ou non. A l'issu: il génére l'entité ainsi que le repository correspondant à l'entité afin de pouvoir
+				      y accéder
+	php bin/console make:form  ->créé un formulaire en liens direct avec une entité. une propriété de l'entité->un champs de formulaire 
+				     soit un champs de table en BDD donne un input (On peut ainsi ensuite utiliser les propriétés de form telles que: createForm(FormType::class, Entity)=>créé le formulaire
+																		      handleRequest($request)=>récupère les données du formulaire 
+																		      createView()=>créé une vue du formulaire pour la Twig
+	php bin/console make:migration  ->génére un fichier de migration des entitées créées ou mofifiées qui n'est autre qu'une suite de requête d'insertion ou de modification
+	php bin/console doctrine:migrations:migrate ->éxécute les migrations générées dans la base de donnée via l'ORM DOCTRINE
+	php bin/console doctrine:schema:update --force ->éxécute une mise à jour de la base de donnée sans nécessiter de migration. Lecture instantanée des entités et requête éxécuté directement en BDD (Déconseillé)
+
+
+########################################### Etapes de projet ##################################
+
+ON a projet de bijouterie. ON sait qu'on veut dans ce projet en base de donnée. Une table 'article', une table 'utilisateur', une table 'categorie'.
+
+pour chaques tables, symfony a besoin d'une entité que l'on va créé avec notre commande: php bin/console make:entity.
+
+première chose à faire, aller dans votre .env à la racine de votre projet pour initier les configurations de connexion à la BDD 
+  
+DATABASE_URL="mysql://root:@127.0.0.1:3306/bijouterie?serverVersion=10.4.18-MariaDB
+et on lance notre commande de symfony: php bin/console doctrine:database:create 
+
+Dans Symfony à chaque fois que nous utilisons une classe de symfony il faut avant ou après importer cette classe, c'est le principe d'injection de dépendance ctr+i sur le nom de la classe en question
+
+apres avoir créé notre entité article en renseignnant toutes les propriétés de cette entité (propriétés correspondant à chaques champs de la table) auxquels nous aurons renseigné leur type, 
+leur longueur en bdd, le fait qu'il soit nullable ou non.
+
+c'est dans ces entités qu'on éffectue les controles sur nos champs avec les Constraints @Assert\NotBlank('message'="votre message"), @Assert\Length() ....
+
+
+A present il faut transmettre à la base de donnée toutes les informations de cette table.
+pour cela nous effectuer la commande suivante: php bin/console doctrine:make:migration. cette commande va nous créé un fichier de migration qui contient la requete sql  de création de notre table.
+Ensuite par la commande php bin/console doctrine:migrations:migrate qui va donc éxécuter dans notre phpmyadmin cette requete sql de création de table préparée prealablement dans le fichier de migration.
+
+a présent, il nous faut des pages, d'acceuil, d'ajout.... . Pour cela il nous faut un Controller qui va se charger de récupérer les informations transmises par l'URL, les interpréter et les renvoyer à une vue en twig.
+Pour créer ce controller nous effectuons la commande, php bin/console make:controller. qui va nous créer notre controller avec une méthode d'index() et un dossier du nom du controller dans notre dossier Templates ainsi qu'un 
+index.html.twig. Ensuite pour créer de nouvelles page, il nous reste à créer une fonction dans notre controller, de lui indiquer ce qu'il doit retourner par l'instruction suivante: 
+
+return $this->render('NomDuDossier/NomDeLaPage.html.twig', [
+dans cet array() on transmet toutes nos infos necessaire pour notre page twig
+  'Nom de la variable que nous utiliserons dans le twig'=> Valeur de la variable à transmettre (entre "" une string, sans "" un chiffre ou une variable $variable
+])
+
+
+
+# Produit $produit => use App\Entity\Produit;  à appeler lors d'une création, modification ou suppression en l'occurence d'un produit
+
+# ProduitRepository $repoProduit => use App\Repository\ProduitRepository; à appeler pour une éffectuer requête en BDD et la transmettre à la Vue  (SELECT )        
+C'est un répertoire de tout les inserts en BDD.
+
+# Request $request => use Symfony\Component\HttpFoundation\Request; à appeler pour obtenir les information d'une superglobale provenant de la vue 
+($_GET=>$request->query(), $_POST=>$request->request(), $_SESSION=>$request->getSession(), $_FILE=>$request->getData(), $_COOKIE=>$request->cookie() ...)
+
+# EntityManagerInterface $manager => use Doctrine\ORM\EntityManagerInterface; à appeler executer une insertion, modification ou suppression. C'est lui qui va binder les
+value et préparer les requêtes avant de les éxécuter
+
+Toutes ces dépendance sont injectées dans nos fontions comme suit:   public function MaFonction(dépendance $dépendance, dépendance $dépendance){}.
+
+Ensuite nous avons besoins de créer un formulaire afin d'ajouter nos articles. Symfony possède une classe Form qui génére ce formulaire. 
+Il nous suffit de faire la commande suivante: php bin/console make:form . à relier à l'entité correspondante à ce formulaire (hérité de la classe FormType).
+C'est dans ce articleType que nous allons effectué des controles sur champs, ajouter ou modifier des inputs à tranmettre dans notre twig, gérer les label, les attributs....
+
+Il nous restera à présent plus qu'à appeler ce formulaire dans notre controller puis le transmettre à notre vue en twig.
+
+$article = new Article;
+
+$form=$this->createForm(NomduTypeClass à importer, L'entité à laquelle il doit correspondre à savoir ici $article);
+
+$form->handleRequest($request);
+
+if($form->isSubmitted && $form->isValid ){
+
+$manager->persist($article);
+$manager->flush();
+$this->addFlash('success', 'felicitation ...');
+
+return redirectToRoute('lenom de la route'); 
+
+}
+
+return $this->render('lapageduformulaire.html.twig,[
+'formulaire'=>$form->createView(),
+]);
+
+a present RDV dans le formulaire.html.twig
+
+{{ form_start(formulaire)}}
+
+{{ form_row(formulaire.lenomduchampsenBDD) }} 
+
+<button type='submit'>Valider</button>
+
+{{ form_end(formulaire)}}
+
+
+
+
+
+
+

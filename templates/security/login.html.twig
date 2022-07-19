@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %} {# étendre le fichier base.html.twig #}
+
+
+
+
+{% block body %}
+
+
+
+
+    <form action="{{ path('login') }}" method="post" class="col-md-4 mx-auto text-center">
+
+        <div class="form-group">
+            <label for="inputEmail">Email</label>
+            <input type="text" class="form-control" id="inputEmail" name="_username" placeholder="Saisir votre email">
+        </div>
+
+
+        <div class="form-group">
+            <label for="inputPassword">Mot de passe</label>
+            <input type="password" class="form-control" id="inputPassword" name="_password" placeholder="Saisir votre mot de passe">
+        </div>
+
+
+        <input type="submit" value='Connexion' class="btn btn-success col-md-12 mt-3">
+
+    </form>
+
+
+
+{% endblock %}
+
